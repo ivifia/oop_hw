@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import patch
-from src.main import Product, Category
+from src.Products import Product
+from src.Category import Category
 
 @pytest.fixture()
 def test_Category():
@@ -23,7 +24,7 @@ def test_Product():
 def test_init_product(test_Product):
     assert test_Product.name == "Иван"
     assert test_Product.description == "lal"
-    assert test_Product.price == 12.0
+    assert test_Product.check_price == 12.0
     assert test_Product.quantity == 4
 def test_set_price(test_Product):
     test_Product.check_price = 15.0

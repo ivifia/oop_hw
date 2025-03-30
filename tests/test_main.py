@@ -69,3 +69,24 @@ def test_new_product_update_existing(product_list):
     assert product.name == "Яблоко"
     assert product.check_price == 12.0
     assert product.quantity == 8
+
+
+def test_str_method_for():
+    products = [Product("Product1", 5,100,5), Product("Product2", 10,100,50), Product("Product3", 15,50,5)]
+    category = Category("Electronics", "Devices and gadgets", products)
+    product=Product("Product1", 5,100,5)
+
+    assert str(category) == "Electronics, количество продуктов: 60 шт."
+    assert str(product)== "Product1, 100 руб. Остаток: 5 шт."
+
+
+def test_product_add():
+    product1 = Product("Laptop", "Gaming Laptop", 1000, 2)
+    product2 = Product("Phone", "Smartphone", 500, 3)
+
+    total_price = product1 + product2
+
+    assert total_price == 3500
+
+
+

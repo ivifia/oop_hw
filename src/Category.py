@@ -12,20 +12,17 @@ class Category:
         self.__products = products
         Category.category_count += 1
         Category.product_count += len(self.__products)
-
+    def __str__(self):
+        quantity=0
+        for i in self.__products:
+            quantity+=i.quantity
+        return f"{self.name}, количество продуктов: {quantity} шт."
     def add_product(self, product):
         if isinstance(product,(Product,Smartphone,LawnGrass)):
             self.__products.append(product)
             Category.product_count += 1
         else:
             raise TypeError
-
-    @property
-    def products_list(self):
-        products_str = ""
-        for i in self.__products:
-            products_str = f"{i.name}, {i.price} руб. Остаток: {i.quantity} шт."
-        return products_str
 
     @property
     def products(self):

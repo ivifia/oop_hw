@@ -5,34 +5,40 @@ class LoggingMixin:
     """Миксин для логирования создания объектов"""
 
     def __init__(self, *args, **kwargs):
-        # Вызываем __init__ родительского класса
-        super().__init__(*args, **kwargs)
+        # Сохраняем аргументы для логирования
+        self._init_args = args
+        self._init_kwargs = kwargs
+        # Вызываем __init__ родительского класса только с основными аргументами
+        super().__init__(*args[:4])  # Передаем только name, description, price, quantity
+        # Логируем после инициализации
+        self._log_creation()
 
-        # Получаем имя класса
+    def _log_creation(self):
+        """Логирует создание объекта"""
         class_name = self.__class__.__name__
 
         # Формируем строку с параметрами
         params = []
 
-        # Обрабатываем позиционные аргументы (первые 4 - основные параметры Product)
-        if len(args) >= 1:
-            params.append(f"name='{args[0]}'")
-        if len(args) >= 2:
-            params.append(f"description='{args[1]}'")
-        if len(args) >= 3:
-            params.append(f"price={args[2]}")
-        if len(args) >= 4:
-            params.append(f"quantity={args[3]}")
+        # Обрабатываем позиционные аргументы (первые 4)
+        if len(self._init_args) >= 1:
+            params.append(f"name='{self._init_args[0]}'")
+        if len(self._init_args) >= 2:
+            params.append(f"description='{self._init_args[1]}'")
+        if len(self._init_args) >= 3:
+            params.append(f"price={self._init_args[2]}")
+        if len(self._init_args) >= 4:
+            params.append(f"quantity={self._init_args[3]}")
 
-            # Обрабатываем именованные аргументы
-            for key, value in kwargs.items():
-                if isinstance(value, str):
-                    params.append(f"{key}='{value}'")
-                else:
-                    params.append(f"{key}={value}")
+        # Обрабатываем именованные аргументы (дополнительные параметры)
+        for key, value in self._init_kwargs.items():
+            if isinstance(value, str):
+                params.append(f"{key}='{value}'")
+            else:
+                params.append(f"{key}={value}")
 
-            # Выводим информацию о создании объекта
-            print(f"Создан объект {class_name}({', '.join(params)})")
+        # Выводим информацию о создании объекта
+        print(f"Создан объект {class_name}({', '.join(params)})")
 
 
 class BaseProduct(ABC):
@@ -63,14 +69,13 @@ class BaseProduct(ABC):
 
 
 class Product(LoggingMixin, BaseProduct):
-    def __init__(self, name, description, price, quantity):
-        # Инициализируем атрибуты напрямую, не передавая лишние аргументы
+    def __init__(self, name, description, price, quantity, **kwargs):
         self.name = name
         self.description = description
         self._price = price
         self.quantity = quantity
-        # Вызываем __init__ миксина после установки атрибутов
-        super().__init__(name, description, price, quantity)
+        # Передаем все аргументы в миксин
+        super().__init__(name, description, price, quantity, **kwargs)
 
     @classmethod
     def new_product(cls, added_product: dict, product_list: list):
@@ -108,29 +113,27 @@ class Product(LoggingMixin, BaseProduct):
             self._price = new_price
 
     def __add__(self, other):
-        if type(other) == self.__class__:
+        if isinstance(other, Product):
             return self.price * self.quantity + other.price * other.quantity
-        raise TypeError
+        raise TypeError("Можно складывать только продукты")
 
 
 class Smartphone(Product):
     def __init__(self, name, description, price, quantity, efficiency, model, memory, color):
-        # Сначала инициализируем основные атрибуты через родительский класс
-        super().__init__(name, description, price, quantity)
-        # Затем устанавливаем специфичные атрибуты
         self.efficiency = efficiency
         self.model = model
         self.memory = memory
         self.color = color
+        # Передаем все параметры в родительский конструктор
+        super().__init__(name, description, price, quantity,
+                         efficiency=efficiency, model=model, memory=memory, color=color)
 
 
 class LawnGrass(Product):
     def __init__(self, name, description, price, quantity, country, germination_period, color):
-        # Сначала инициализируем основные атрибуты через родительский класс
-        super().__init__(name, description, price, quantity)
-        # Затем устанавливаем специфичные атрибуты
         self.country = country
         self.germination_period = germination_period
         self.color = color
-
-
+        # Передаем все параметры в родительский конструктор
+        super().__init__(name, description, price, quantity,
+                         country=country, germination_period=germination_period, color=color)

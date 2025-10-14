@@ -86,8 +86,7 @@ def test_new_product_update_existing(product_list):
 
 @pytest.fixture()
 def test_Smartphone():
-    return Smartphone("Samsung A73", "good smartphone", 50.0, 35, "high", "A73", "128GB", "grey")
-
+    return Smartphone("Samsung A73", "good smartphone", 50.0, 35, "high", "A73", 128, "grey")
 
 def test_init_smartphone(test_Smartphone):
     assert test_Smartphone.name == "Samsung A73"
@@ -139,15 +138,10 @@ def product():
     return Product("Телефон", "Смартфон", 50000, 3)
 
 
-@pytest.fixture
-def smartphone():
-    return Smartphone("iPhone", "Премиум", 100000, 5, "A15", "13 Pro", "256GB", "Silver")
-
 
 @pytest.fixture
 def smartphone():
-    return Smartphone("iPhone", "Премиум", 100000, 5, "A15", "13 Pro", "256GB", "Silver")
-
+    return Smartphone("iPhone", "Премиум", 100000, 5, "A15", "13 Pro", 256, "Silver")
 @pytest.fixture
 def lawn_grass():
     return LawnGrass("Трава", "Для газона", 500, 10, "Россия", "14 дней", "Зеленая")
@@ -277,7 +271,7 @@ def test_existing_functionality_still_works():
     assert total == (100.0 * 10) + (200.0 * 5)
 
 
-def test_category_with_logged_products():
+def test_category_with_logged_products(capsys):  # Добавляем capsys как параметр
     """Тест работы Category с продуктами, созданными через миксин"""
     # Создаем продукты (логирование сработает)
     product1 = Product("Prod1", "Desc1", 10.0, 5)

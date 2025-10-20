@@ -1,4 +1,4 @@
-from src.Products import Product,Smartphone,LawnGrass
+from src.Products import BaseProduct, Product, Smartphone, LawnGrass
 class Category:
     name: str
     description: str
@@ -27,4 +27,5 @@ class Category:
     @property
     def products(self):
         return self.__products
+
 

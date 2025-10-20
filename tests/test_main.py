@@ -320,3 +320,147 @@ def test_logging_mixin_multiple_inheritance():
     base_product_index = mro.index(Product.__bases__[1])  # Второй родительский класс
 
     assert logging_mixin_index < base_product_index, "LoggingMixin должен быть первым в цепочке наследования"
+
+
+def test_product_zero_quantity_raises_error():
+    """Тест, что создание товара с нулевым количеством вызывает исключение"""
+    with pytest.raises(ValueError, match="Товар с нулевым количеством не может быть добавлен"):
+        Product("Test Product", "Test Description", 100.0, 0)
+
+
+def test_smartphone_zero_quantity_raises_error():
+    """Тест, что создание смартфона с нулевым количеством вызывает исключение"""
+    with pytest.raises(ValueError, match="Товар с нулевым количеством не может быть добавлен"):
+        Smartphone("Test Phone", "Test Desc", 200.0, 0, "High", "ModelX", "128GB", "Black")
+
+
+def test_lawn_grass_zero_quantity_raises_error():
+    """Тест, что создание газонной травы с нулевым количеством вызывает исключение"""
+    with pytest.raises(ValueError, match="Товар с нулевым количеством не может быть добавлен"):
+        LawnGrass("Test Grass", "Test Desc", 50.0, 0, "USA", "30 days", "Green")
+
+
+def test_new_product_zero_quantity_raises_error(product_list):
+    """Тест, что метод new_product с нулевым количеством вызывает исключение"""
+    added_product = {"name": "Zero Product", "description": "Zero Desc", "price": 10.0, "quantity": 0}
+
+    with pytest.raises(ValueError, match="Товар с нулевым количеством не может быть добавлен"):
+        Product.new_product(added_product, product_list)
+
+
+def test_new_product_update_to_zero_quantity_raises_error(product_list):
+    """Тест, что обновление существующего товара до нулевого количества вызывает исключение"""
+    # Сначала создаем товар с количеством 1
+    existing_product = {"name": "Test Product", "description": "Test Desc", "price": 10.0, "quantity": 1}
+    Product.new_product(existing_product, product_list)
+
+    # Пытаемся добавить -1, чтобы общее количество стало 0
+    updated_product = {"name": "Test Product", "description": "Test Desc", "price": 12.0, "quantity": -1}
+
+    with pytest.raises(ValueError, match="Товар с нулевым количеством не может быть добавлен"):
+        Product.new_product(updated_product, product_list)
+
+
+def test_valid_products_still_work():
+    """Тест, что товары с положительным количеством все еще работают"""
+    # Эти вызовы не должны вызывать исключений
+    product = Product("Valid Product", "Valid Desc", 100.0, 1)
+    smartphone = Smartphone("Valid Phone", "Valid Desc", 200.0, 5, "High", "ModelX", "128GB", "Black")
+    lawn_grass = LawnGrass("Valid Grass", "Valid Desc", 50.0, 10, "USA", "30 days", "Green")
+
+    assert product.quantity == 1
+    assert smartphone.quantity == 5
+    assert lawn_grass.quantity == 10
+
+
+def test_category_add_zero_quantity_product_raises_error(category, product):
+    """Тест, что добавление товара с нулевым количеством в категорию вызывает исключение"""
+    # Устанавливаем количество товара в 0
+    product.quantity = 0
+
+    with pytest.raises(ValueError, match="Товар с нулевым количеством не может быть добавлен"):
+        category.add_product(product)
+
+
+def test_category_average_price_with_products():
+    """Тест расчета среднего ценника с товарами в категории"""
+    product1 = Product("Товар1", "Описание1", 100.0, 5)
+    product2 = Product("Товар2", "Описание2", 200.0, 3)
+    product3 = Product("Товар3", "Описание3", 300.0, 2)
+
+    category = Category("Тестовая категория", "Описание", [product1, product2, product3])
+
+    # Среднее: (100 + 200 + 300) / 3 = 200.0
+    assert category.average_price() == 200.0
+
+
+def test_category_average_price_single_product():
+    """Тест расчета среднего ценника с одним товаром"""
+    product = Product("Товар1", "Описание1", 150.0, 5)
+    category = Category("Тестовая категория", "Описание", [product])
+
+    assert category.average_price() == 150.0
+
+
+def test_category_average_price_empty_category():
+    """Тест расчета среднего ценника с пустой категорией"""
+    category = Category("Пустая категория", "Описание", [])
+
+    assert category.average_price() == 0
+
+
+def test_category_average_price_after_adding_products():
+    """Тест расчета среднего ценника после добавления товаров"""
+    category = Category("Категория", "Описание", [])
+
+    # Изначально категория пуста
+    assert category.average_price() == 0
+
+    # Добавляем товары
+    product1 = Product("Товар1", "Описание1", 100.0, 5)
+    product2 = Product("Товар2", "Описание2", 300.0, 3)
+    category.add_product(product1)
+    category.add_product(product2)
+
+    # Среднее: (100 + 300) / 2 = 200.0
+    assert category.average_price() == 200.0
+
+
+def test_category_average_price_with_different_product_types():
+    """Тест расчета среднего ценника с разными типами товаров"""
+    product = Product("Обычный товар", "Описание", 100.0, 5)
+    smartphone = Smartphone("Смартфон", "Хороший", 500.0, 3, "Высокая", "ModelX", 128, "Black")
+    lawn_grass = LawnGrass("Трава", "Зеленая", 50.0, 10, "Россия", "14 дней", "Green")
+
+    category = Category("Разные товары", "Описание", [product, smartphone, lawn_grass])
+
+    # Среднее: (100 + 500 + 50) / 3 ≈ 216.67
+    expected_average = (100 + 500 + 50) / 3
+    assert category.average_price() == expected_average
+
+
+def test_category_average_price_zero_price_products():
+    """Тест расчета среднего ценника с товарами с нулевой ценой"""
+    product1 = Product("Товар1", "Описание1", 0.0, 5)
+    product2 = Product("Товар2", "Описание2", 0.0, 3)
+    product3 = Product("Товар3", "Описание3", 300.0, 2)
+
+    category = Category("Категория с нулевыми ценами", "Описание", [product1, product2, product3])
+
+    # Среднее: (0 + 0 + 300) / 3 = 100.0
+    assert category.average_price() == 100.0
+
+
+def test_category_average_price_after_removal():
+    """Тест расчета среднего ценника после удаления товаров (симуляция)"""
+    product1 = Product("Товар1", "Описание1", 100.0, 5)
+    product2 = Product("Товар2", "Описание2", 200.0, 3)
+    product3 = Product("Товар3", "Описание3", 300.0, 2)
+
+    # Создаем категорию с тремя товарами
+    category = Category("Категория", "Описание", [product1, product2, product3])
+    assert category.average_price() == 200.0
+
+    # Симулируем удаление товара (создаем новую категорию без одного товара)
+    category_with_two = Category("Категория", "Описание", [product1, product2])
+    assert category_with_two.average_price() == 150.0

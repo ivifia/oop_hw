@@ -70,6 +70,10 @@ class BaseProduct(ABC):
 
 class Product(LoggingMixin, BaseProduct):
     def __init__(self, name, description, price, quantity, **kwargs):
+        # Проверяем количество товара
+        if quantity == 0:
+            raise ValueError("Товар с нулевым количеством не может быть добавлен")
+
         self.name = name
         self.description = description
         self._price = price
@@ -79,9 +83,18 @@ class Product(LoggingMixin, BaseProduct):
 
     @classmethod
     def new_product(cls, added_product: dict, product_list: list):
+        # Проверяем количество при создании нового товара
+        if added_product["quantity"] == 0:
+            raise ValueError("Товар с нулевым количеством не может быть добавлен")
+
         for product in product_list:
             if product.name == added_product["name"]:
-                product.quantity += added_product["quantity"]
+                # При обновлении существующего товара проверяем, чтобы общее количество не стало нулевым
+                new_quantity = product.quantity + added_product["quantity"]
+                if new_quantity == 0:
+                    raise ValueError("Товар с нулевым количеством не может быть добавлен")
+
+                product.quantity = new_quantity
                 product.price = max(product.price, added_product["price"])
                 return product
 

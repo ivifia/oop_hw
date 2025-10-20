@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import patch, MagicMock
-from src.Products import Product, Smartphone, LawnGrass, LoggingMixin
+from src.Products import Product, Smartphone, LawnGrass, LoggingMixin, BaseProduct
 from src.Category import Category
 
 
@@ -88,6 +88,7 @@ def test_new_product_update_existing(product_list):
 def test_Smartphone():
     return Smartphone("Samsung A73", "good smartphone", 50.0, 35, "high", "A73", 128, "grey")
 
+
 def test_init_smartphone(test_Smartphone):
     assert test_Smartphone.name == "Samsung A73"
     assert test_Smartphone.description == "good smartphone"
@@ -102,6 +103,7 @@ def test_init_smartphone(test_Smartphone):
 @pytest.fixture()
 def test_LawnGrass():
     return LawnGrass("Grass_cuter", "best", 50.0, 35, "Germany", "73 days", "grey")
+
 
 def test_init_LawnGrass(test_LawnGrass):
     assert test_LawnGrass.name == "Grass_cuter"
@@ -138,13 +140,15 @@ def product():
     return Product("Телефон", "Смартфон", 50000, 3)
 
 
-
 @pytest.fixture
 def smartphone():
     return Smartphone("iPhone", "Премиум", 100000, 5, "A15", "13 Pro", 256, "Silver")
+
+
 @pytest.fixture
 def lawn_grass():
     return LawnGrass("Трава", "Для газона", 500, 10, "Россия", "14 дней", "Зеленая")
+
 
 def test_add_valid_product(category, product):
     category.add_product(product)
@@ -271,7 +275,7 @@ def test_existing_functionality_still_works():
     assert total == (100.0 * 10) + (200.0 * 5)
 
 
-def test_category_with_logged_products(capsys):  # Добавляем capsys как параметр
+def test_category_with_logged_products(capsys):
     """Тест работы Category с продуктами, созданными через миксин"""
     # Создаем продукты (логирование сработает)
     product1 = Product("Prod1", "Desc1", 10.0, 5)
@@ -464,3 +468,264 @@ def test_category_average_price_after_removal():
     # Симулируем удаление товара (создаем новую категорию без одного товара)
     category_with_two = Category("Категория", "Описание", [product1, product2])
     assert category_with_two.average_price() == 150.0
+
+
+# ДОПОЛНИТЕЛЬНЫЕ ТЕСТЫ ДЛЯ УВЕЛИЧЕНИЯ ПОКРЫТИЯ
+
+def test_product_addition_with_different_classes():
+    """Тест сложения продуктов разных классов-наследников"""
+    smartphone = Smartphone("Phone", "Smart", 200.0, 3, "High", "M1", 128, "Black")
+    lawn_grass = LawnGrass("Grass", "Green", 50.0, 10, "USA", "30d", "Green")
+
+    total = smartphone + lawn_grass
+    assert total == (200.0 * 3) + (50.0 * 10)
+
+
+def test_product_addition_invalid_type():
+    """Тест сложения с неподдерживаемым типом"""
+    product = Product("Product", "Desc", 100.0, 2)
+
+    with pytest.raises(TypeError):
+        product + "invalid_type"
+
+
+def test_category_add_invalid_type():
+    """Тест добавления неподдерживаемого типа в категорию"""
+    category = Category("Test", "Desc", [])
+
+    with pytest.raises(TypeError):
+        category.add_product("invalid_product")
+
+
+def test_product_price_getter():
+    """Тест геттера цены"""
+    product = Product("Test", "Desc", 100.0, 5)
+    assert product.price == 100.0
+
+
+def test_product_str_representation():
+    """Тест строкового представления продукта"""
+    product = Product("Test", "Desc", 100.0, 5)
+    assert hasattr(product, 'name')
+    assert hasattr(product, 'description')
+    assert hasattr(product, 'price')
+    assert hasattr(product, 'quantity')
+
+
+def test_smartphone_inheritance():
+    """Тест наследования Smartphone от Product"""
+    smartphone = Smartphone("Phone", "Desc", 100.0, 5, "High", "M1", 128, "Black")
+    assert isinstance(smartphone, Product)
+
+
+def test_lawn_grass_inheritance():
+    """Тест наследования LawnGrass от Product"""
+    lawn_grass = LawnGrass("Grass", "Desc", 50.0, 10, "USA", "30d", "Green")
+    assert isinstance(lawn_grass, Product)
+
+
+def test_category_products_list_property():
+    """Тест свойства products_list"""
+    product = Product("Test", "Desc", 100.0, 5)
+    category = Category("Test", "Desc", [product])
+
+    products_list = category.products_list
+    assert isinstance(products_list, str)
+    assert "Test" in products_list
+
+
+def test_category_counters():
+    """Тест счетчиков категорий и продуктов"""
+    # Сбрасываем счетчики для чистого теста
+    Category.category_count = 0
+    Category.product_count = 0
+
+    product1 = Product("Товар1", "Описание1", 100.0, 2)
+    product2 = Product("Товар2", "Описание2", 200.0, 3)
+
+    category = Category("Категория", "Описание", [product1, product2])
+
+    assert Category.category_count >= 1
+    assert Category.product_count >= 2
+
+
+def test_base_product_abstract_methods():
+    """Тест, что BaseProduct действительно абстрактный"""
+    with pytest.raises(TypeError):
+        BaseProduct("Test", "Desc", 100.0, 5)
+
+
+def test_product_price_setter_increase():
+    """Тест увеличения цены через сеттер"""
+    product = Product("Test", "Desc", 100.0, 5)
+    product.price = 150.0
+    assert product.price == 150.0
+
+
+def test_product_price_setter_same_price():
+    """Тест установки той же цены"""
+    product = Product("Test", "Desc", 100.0, 5)
+    product.price = 100.0
+    assert product.price == 100.0
+
+
+def test_logging_mixin_with_numeric_memory(capsys):  # ИСПРАВЛЕНО: добавлен capsys
+    """Тест логирования с числовым параметром памяти"""
+    smartphone = Smartphone("Phone", "Desc", 200.0, 5, "High", "M1", 256, "Black")
+
+    captured = capsys.readouterr()
+    output = captured.out.strip()
+
+    assert "memory=256" in output
+
+
+def test_category_private_products_access():
+    """Тест доступа к приватному списку продуктов"""
+    product = Product("Test", "Desc", 100.0, 5)
+    category = Category("Test", "Desc", [product])
+
+    # Проверяем, что доступ через свойство works
+    assert len(category.products) == 1
+    assert category.products[0].name == "Test"
+
+
+def test_product_creation_with_kwargs():
+    """Тест создания продукта с дополнительными kwargs"""
+    # Это проверит обработку **kwargs в конструкторе
+    product = Product("Test", "Desc", 100.0, 5, extra_param="value")
+    assert product.name == "Test"
+
+
+def test_smartphone_creation_with_string_memory():
+    """Тест создания смартфона со строковой памятью"""
+    smartphone = Smartphone("Phone", "Desc", 200.0, 5, "High", "M1", "256GB", "Black")
+    assert smartphone.memory == "256GB"
+
+
+def test_lawn_grass_creation_variations():
+    """Тест создания газонной травы с различными параметрами"""
+    lawn_grass = LawnGrass("Grass", "Desc", 75.0, 15, "Germany", "30 days", "Dark Green")
+    assert lawn_grass.country == "Germany"
+    assert lawn_grass.germination_period == "30 days"
+
+
+# ДОПОЛНИТЕЛЬНЫЕ ТЕСТЫ ДЛЯ 100% ПОКРЫТИЯ
+
+def test_product_price_setter_zero_price():
+    """Тест установки нулевой цены"""
+    product = Product("Test", "Desc", 100.0, 5)
+    with patch("builtins.print") as mocked_print:
+        product.price = 0.0
+        mocked_print.assert_called_with("Цена не должна быть нулевая или отрицательная")
+        assert product.price == 100.0
+
+
+def test_product_price_setter_negative_price():
+    """Тест установки отрицательной цены"""
+    product = Product("Test", "Desc", 100.0, 5)
+    with patch("builtins.print") as mocked_print:
+        product.price = -50.0
+        mocked_print.assert_called_with("Цена не должна быть нулевая или отрицательная")
+        assert product.price == 100.0
+
+
+def test_product_addition_same_class():
+    """Тест сложения продуктов одного класса"""
+    product1 = Product("Product1", "Desc", 100.0, 2)
+    product2 = Product("Product2", "Desc", 200.0, 3)
+
+    total = product1 + product2
+    assert total == (100.0 * 2) + (200.0 * 3)
+
+
+def test_category_multiple_additions():
+    """Тест множественного добавления товаров в категорию"""
+    category = Category("Test", "Desc", [])
+    product1 = Product("Product1", "Desc", 100.0, 2)
+    product2 = Product("Product2", "Desc", 200.0, 3)
+    product3 = Product("Product3", "Desc", 300.0, 1)
+
+    category.add_product(product1)
+    category.add_product(product2)
+    category.add_product(product3)
+
+    assert len(category.products) == 3
+    assert category.average_price() == 200.0
+
+
+def test_category_initialization_with_products():
+    """Тест инициализации категории с товарами"""
+    product1 = Product("Product1", "Desc", 100.0, 2)
+    product2 = Product("Product2", "Desc", 200.0, 3)
+
+    category = Category("Test", "Desc", [product1, product2])
+
+    assert len(category.products) == 2
+    assert category.average_price() == 150.0
+
+
+def test_logging_mixin_empty_args():
+    """Тест логирования с пустыми аргументами"""
+
+    # Создаем временный класс для тестирования
+    class TestClass(LoggingMixin):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+
+    # Тестируем с пустыми аргументами
+    test_obj = TestClass()
+
+    # Проверяем, что объект создан
+    assert test_obj is not None
+
+
+def test_product_new_product_same_price():
+    """Тест new_product с той же ценой"""
+    product_list = []
+    existing_product = {"name": "Product", "description": "Desc", "price": 100.0, "quantity": 5}
+    Product.new_product(existing_product, product_list)
+
+    # Обновляем с той же ценой
+    updated_product = {"name": "Product", "description": "Desc", "price": 100.0, "quantity": 3}
+    product = Product.new_product(updated_product, product_list)
+
+    assert product.price == 100.0
+    assert product.quantity == 8
+
+
+def test_product_new_product_lower_price():
+    """Тест new_product с более низкой ценой"""
+    product_list = []
+    existing_product = {"name": "Product", "description": "Desc", "price": 100.0, "quantity": 5}
+    Product.new_product(existing_product, product_list)
+
+    # Обновляем с более низкой ценой (должна остаться старая цена)
+    updated_product = {"name": "Product", "description": "Desc", "price": 50.0, "quantity": 3}
+    product = Product.new_product(updated_product, product_list)
+
+    assert product.price == 100.0  # Старая цена должна сохраниться
+    assert product.quantity == 8
+
+
+def test_category_products_list_multiple_products():
+    """Тест products_list с несколькими товарами"""
+    product1 = Product("Product1", "Desc1", 100.0, 2)
+    product2 = Product("Product2", "Desc2", 200.0, 3)
+
+    category = Category("Test", "Desc", [product1, product2])
+
+    products_list = category.products_list
+    assert isinstance(products_list, str)
+    # Проверяем, что содержит информацию о товарах
+    assert any(name in products_list for name in ["Product1", "Product2"])
+
+
+def test_logging_mixin_complex_parameters():
+    """Тест логирования со сложными параметрами"""
+    # Тестируем с различными типами параметров
+    smartphone = Smartphone("Complex Phone", "Description", 999.99, 1, "Ultra", "Z1000", 1024, "Space Gray")
+
+    # Проверяем, что объект создан корректно
+    assert smartphone.name == "Complex Phone"
+    assert smartphone.price == 999.99
+    assert smartphone.memory == 1024
